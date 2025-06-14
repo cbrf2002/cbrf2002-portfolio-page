@@ -16,8 +16,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`bg-brand-white dark:bg-brand-black text-brand-black dark:text-brand-white overflow-x-auto antialiased`} // Changed from overflow-x-hidden
-        style={{ cursor: 'none' }}
+        className={`bg-brand-white dark:bg-brand-black text-brand-black dark:text-brand-white overflow-x-auto antialiased`}
       >
         <ThemeProvider
           attribute="class"
