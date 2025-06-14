@@ -12,6 +12,7 @@ export default function CustomCursor() {
   const [isClicking, setIsClicking] = useState(false);
   const [scale, setScale] = useState(1);
   const [animatedSize, setAnimatedSize] = useState(BASE_SIZE);
+  const [hasMouseDevice, setHasMouseDevice] = useState(false);
 
   const animationFrameId = useRef<number | null>(null);
   const prevSmoothPosForScaleCalc = useRef({ x: 0, y: 0 });
@@ -19,10 +20,30 @@ export default function CustomCursor() {
   const animatedSizeRef = useRef(BASE_SIZE); // Use ref for animatedSize inside animation
 
   const positionEasingFactor = 0.15;
-
   useEffect(() => {
+    // Detect if device has mouse capability
+    const detectMouseDevice = () => {
+      // Check for mouse capability
+      const hasMouseCapability = window.matchMedia('(pointer: fine)').matches;
+      // Check for touch capability
+      const hasTouchCapability =
+        'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+      // If device has fine pointer (mouse) capability, show cursor
+      // If device only has touch, don't show cursor
+      setHasMouseDevice(
+        hasMouseCapability && !(!hasMouseCapability && hasTouchCapability)
+      );
+    };
+
+    detectMouseDevice();
+
     const updateMousePosition = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
+      // If we detect actual mouse movement, enable cursor
+      if (!hasMouseDevice) {
+        setHasMouseDevice(true);
+      }
     };
 
     document.addEventListener('mousemove', updateMousePosition);
@@ -34,7 +55,7 @@ export default function CustomCursor() {
     return () => {
       document.removeEventListener('mousemove', updateMousePosition);
     };
-  }, []); // Removed smoothPosition and animatedSize from here as they are not needed for this effect.
+  }, [animatedSize, smoothPosition, hasMouseDevice]);
 
   useEffect(() => {
     const handleMouseDown = () => setIsClicking(true);
@@ -143,8 +164,12 @@ export default function CustomCursor() {
     const targetScale = 1 - Math.min(speed / 200, 0.08);
     setScale(targetScale);
   }, [smoothPosition]); // This effect runs when smoothPosition changes
-
   const transformStyle = `translate(-50%, -50%) scale(${scale})`;
+
+  // Don't render cursor if no mouse device is detected
+  if (!hasMouseDevice) {
+    return null;
+  }
 
   return (
     <div
