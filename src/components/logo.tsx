@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
+import customImageLoader from '@/lib/image-loader'; // Import the custom loader
 
 type LogoSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'custom';
 
@@ -105,6 +106,7 @@ export default function Logo({
   return (
     <div className={`relative ${classes} ${mobileConstraints} ${className}`}>
       <Image
+        loader={customImageLoader}
         src={currentLogoSrc}
         alt="CBRF2002 Logo"
         width={dimensions.width}
