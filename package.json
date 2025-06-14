@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "npx @cloudflare/next-on-pages --outdir=./cf-pages-output",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
@@ -41,6 +41,7 @@
     "tailwindcss": "^4.1.10",
     "@tailwindcss/postcss": "^4.1.10",
     "autoprefixer": "^10.4.21",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "@cloudflare/next-on-pages": "^1"
   }
 }
