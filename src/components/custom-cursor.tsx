@@ -6,7 +6,7 @@ const BASE_SIZE = 24; // Corresponds to w-6
 const CLICKED_SIZE = 32; // Corresponds to w-8
 const SIZE_EASING_FACTOR = 0.2; // Easing for size change
 
-export default function CustomCursor() {
+const CustomCursor: React.FC = () => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [smoothPosition, setSmoothPosition] = useState({ x: 0, y: 0 });
   const [isClicking, setIsClicking] = useState(false);
@@ -183,4 +183,6 @@ export default function CustomCursor() {
       }}
     />
   );
-}
+};
+
+export default CustomCursor;

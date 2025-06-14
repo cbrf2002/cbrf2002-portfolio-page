@@ -18,3 +18,7 @@ export default function customImageLoader({
   // Ensure your src paths are correct relative to the /public directory or your image source.
   return `${src}?w=${width}&q=${quality || 75}`;
 }
+
+// This file can be populated with image loading logic later.
+// For now, export an empty object to make it a module.
+export {};

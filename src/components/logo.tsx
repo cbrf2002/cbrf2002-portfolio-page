@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
 import customImageLoader from '@/lib/image-loader'; // Import the custom loader
+import React from 'react';
 
 type LogoSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'custom';
 
@@ -117,3 +118,9 @@ export default function Logo({
     </div>
   );
 }
+
+const LogoPlaceholder: React.FC = () => {
+  return <div>Logo Placeholder</div>;
+};
+
+export { LogoPlaceholder };
