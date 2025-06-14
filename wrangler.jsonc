@@ -1,8 +1,8 @@
 {
   "name": "cbrf2002-portfolio-page", // Replace with your actual Cloudflare project name
-  "compatibility_date": "2025-06-14", // Date from the Wrangler error log. Adjust if needed.
-  "main": "./cf-pages-output/_worker.js", // Entry point for the Worker script
+  "compatibility_date": "2024-05-15",
+  "main": "./cf-pages-output/_worker.js",
   "site": {
-    "bucket": "./cf-pages-output"
-  }
+    "bucket": "./cf-pages-output",
+  },
 }
