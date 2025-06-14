@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useTheme } from 'next-themes';
+import { useEffect, useState } from 'react';
 
 export default function ThemeToggle() {
   const { theme, setTheme } = useTheme();
@@ -14,29 +14,19 @@ export default function ThemeToggle() {
   if (!mounted) return null;
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark");
+    setTheme(theme === 'dark' ? 'light' : 'dark');
   };
 
   return (
     <button
       onClick={toggleTheme}
-      className="
-        relative p-2 rounded-full 
-        bg-brand-black/10 dark:bg-brand-white/10
-        hover:bg-brand-black/20 dark:hover:bg-brand-white/20
-        transition-all duration-300 ease-in-out
-        focus:outline-none focus:ring-2 focus:ring-brand-black/50 dark:focus:ring-brand-white/50
-      "
-      aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+      className="bg-brand-black/10 dark:bg-brand-white/10 hover:bg-brand-black/20 dark:hover:bg-brand-white/20 relative rounded-full p-2 transition-all duration-300 ease-in-out focus:outline-none"
+      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
-      <div className="relative w-6 h-6 overflow-hidden">
+      <div className="relative h-6 w-6 overflow-hidden">
         {/* Sun Icon */}
         <svg
-          className={`
-            absolute inset-0 w-6 h-6 text-brand-black dark:text-brand-white
-            transition-transform duration-300 ease-in-out
-            ${theme === "dark" ? "rotate-90 scale-0" : "rotate-0 scale-100"}
-          `}
+          className={`text-brand-black dark:text-brand-white absolute inset-0 h-6 w-6 transition-opacity duration-300 ease-in-out ${theme === 'dark' ? 'scale-0 rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100'} `}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -48,11 +38,7 @@ export default function ThemeToggle() {
 
         {/* Moon Icon */}
         <svg
-          className={`
-            absolute inset-0 w-6 h-6 text-brand-black dark:text-brand-white
-            transition-transform duration-300 ease-in-out
-            ${theme === "dark" ? "rotate-0 scale-100" : "-rotate-90 scale-0"}
-          `}
+          className={`text-brand-black dark:text-brand-white absolute inset-0 h-6 w-6 transition-opacity duration-300 ease-in-out ${theme === 'dark' ? 'scale-100 rotate-0 opacity-100' : 'scale-0 -rotate-90 opacity-0'} `}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
