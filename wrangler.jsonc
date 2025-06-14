@@ -3,6 +3,6 @@
   "compatibility_date": "2025-06-14", // Date from the Wrangler error log. Adjust if needed.
   "main": "./cf-pages-output/_worker.js", // Entry point for the Worker script
   "site": {
-    "bucket": "./cf-pages-output", // Directory containing static assets
-  },
+    "bucket": "./cf-pages-output"
+  }
 }
