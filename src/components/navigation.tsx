@@ -141,7 +141,7 @@ export default function Navigation() {
                   <Link
                     key={href}
                     href={href}
-                    onClick={toggleMobileMenu} // Close menu on link click
+                    onClick={toggleMobileMenu}
                     className={`px-4 py-3 text-xl font-semibold transition-colors duration-300 ${
                       pathname === href
                         ? 'text-brand-black dark:text-brand-white'
