@@ -31,16 +31,18 @@ const sphereColorPalette = [
 
 export default function InteractiveBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const noiseCanvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>(0);
   const spheresRef = useRef<Sphere[]>([]);
   const mouseRef = useRef({ x: 0, y: 0 });
   const [mounted, setMounted] = useState(false);
-  const { resolvedTheme } = useTheme(); // Use resolvedTheme
+  const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
+  // Effect for sphere canvas logic
   useEffect(() => {
     if (!mounted) return;
     const canvas = canvasRef.current!;
@@ -220,9 +222,8 @@ export default function InteractiveBackground() {
       animationRef.current = requestAnimationFrame(animate);
     };
 
-    const handleResize = () => {
+    const handleResizeSpheres = () => {
       resizeCanvas();
-      // clamp existing sphere radii to new viewport size
       const vw = window.innerWidth;
       const vh = window.innerHeight;
       const diag = Math.sqrt(vw * vw + vh * vh);
@@ -237,13 +238,86 @@ export default function InteractiveBackground() {
     initSpheres();
     animate();
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', handleResizeSpheres);
     window.addEventListener('mousemove', updateMousePosition);
 
     return () => {
       cancelAnimationFrame(animationRef.current);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', handleResizeSpheres);
       window.removeEventListener('mousemove', updateMousePosition);
+    };
+  }, [mounted]);
+
+  useEffect(() => {
+    if (!mounted || !noiseCanvasRef.current) return;
+
+    const noiseCanvas = noiseCanvasRef.current;
+    const noiseCtx = noiseCanvas.getContext('2d');
+    if (!noiseCtx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    let patternCanvasCache: HTMLCanvasElement | null = null;
+
+    const generateNoisePattern = () => {
+      const patternSize = 512;
+      const offscreenCanvas = document.createElement('canvas');
+      offscreenCanvas.width = patternSize;
+      offscreenCanvas.height = patternSize;
+      const pCtx = offscreenCanvas.getContext('2d');
+      if (!pCtx) return null;
+
+      const imageData = pCtx.createImageData(patternSize, patternSize);
+      const data = imageData.data;
+
+      const isDarkTheme = resolvedTheme === 'dark';
+      const noiseColorValue = isDarkTheme ? 255 : 0;
+      const noiseAlphaValue = isDarkTheme
+        ? Math.round(0.04 * 255)
+        : Math.round(0.09 * 255);
+
+      for (let i = 0; i < data.length; i += 4) {
+        if (Math.random() < 0.15) {
+          data[i] = noiseColorValue; // R
+          data[i + 1] = noiseColorValue; // G
+          data[i + 2] = noiseColorValue; // B
+          data[i + 3] = noiseAlphaValue; // Alpha
+        } else {
+          data[i + 3] = 0;
+        }
+      }
+      pCtx.putImageData(imageData, 0, 0);
+      return offscreenCanvas;
+    };
+
+    const setupNoiseCanvas = () => {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      noiseCanvas.style.width = `${vw}px`;
+      noiseCanvas.style.height = `${vh}px`;
+      noiseCanvas.width = vw * dpr;
+      noiseCanvas.height = vh * dpr;
+      noiseCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      if (!patternCanvasCache) {
+        patternCanvasCache = generateNoisePattern();
+      }
+
+      if (patternCanvasCache) {
+        const pattern = noiseCtx.createPattern(patternCanvasCache, 'repeat');
+        if (pattern) {
+          noiseCtx.clearRect(0, 0, vw, vh);
+          noiseCtx.fillStyle = pattern;
+          noiseCtx.fillRect(0, 0, vw, vh);
+        }
+      }
+    };
+
+    patternCanvasCache = generateNoisePattern(); // Regenerate pattern on theme change
+    setupNoiseCanvas();
+
+    window.addEventListener('resize', setupNoiseCanvas);
+    return () => {
+      window.removeEventListener('resize', setupNoiseCanvas);
     };
   }, [mounted, resolvedTheme]);
 
@@ -253,20 +327,8 @@ export default function InteractiveBackground() {
     <div className="pointer-events-none fixed inset-0 z-0">
       {/* Interactive background spheres - drawn on canvas, visually at the bottom of this stack */}
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-
-      {/* Glass overlay - blurs the canvas and base page background */}
       <div className="glass absolute inset-0" />
-
-      {/* Theme-specific noise texture overlay - on top of the glass */}
-      <div
-        className="absolute inset-0"
-        style={{
-          backgroundImage: `url(/images/${resolvedTheme === 'dark' ? 'noise-dark' : 'noise-light'}.svg)`,
-          backgroundSize: '1000px 1000px',
-          backgroundRepeat: 'repeat',
-          opacity: 0.5,
-        }}
-      />
+      <canvas ref={noiseCanvasRef} className="absolute inset-0 h-full w-full" />
     </div>
   );
 }
