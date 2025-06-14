@@ -4,7 +4,7 @@ import Image from 'next/image';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTheme } from 'next-themes';
 import { motion, AnimatePresence, Transition } from 'framer-motion';
-import customImageLoader from '@/lib/image-loader'; // Import the custom loader
+import { getOptimizedImageProps } from '@/lib/image-loader';
 
 const showcaseImagesData = [
   {
@@ -13,7 +13,7 @@ const showcaseImagesData = [
     dark: '/images/mobiledev/mainScreens/agrosphere/agrosphere-dash-dark.png',
     baseWidth: 360,
     baseHeight: 600,
-    alt: 'Agrosphere app screenshot',
+    alt: 'Agrosphere app screenshot showing the dashboard interface',
   },
   {
     name: 'Fundi',
@@ -21,7 +21,7 @@ const showcaseImagesData = [
     dark: '/images/mobiledev/mainScreens/fundi/fundi-dash-dark.png',
     baseWidth: 360,
     baseHeight: 600,
-    alt: 'Fundi app screenshot',
+    alt: 'Fundi app screenshot displaying the main dashboard',
   },
   {
     name: 'JuanFile',
@@ -29,7 +29,7 @@ const showcaseImagesData = [
     dark: '/images/mobiledev/mainScreens/juanfile/jf-dash-dark.png',
     baseWidth: 360,
     baseHeight: 600,
-    alt: 'JuanFile app screenshot',
+    alt: 'JuanFile app screenshot showing the file management interface',
   },
 ];
 
@@ -188,6 +188,16 @@ export default function MobileShowcase() {
                 translateX = offset < showcaseImagesData.length / 2 ? 80 : -80;
               }
 
+              // Get optimized image props
+              const imageProps = getOptimizedImageProps(currentSrc, img.alt, {
+                width: img.baseWidth,
+                height: img.baseHeight,
+                quality: 90, // Higher quality for showcase images
+                priority: offset === 0, // Prioritize center image
+                sizes:
+                  '(max-width: 480px) 240px, (max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, (max-width: 1280px) 352px, 384px',
+              });
+
               return (
                 <motion.div
                   key={img.name}
@@ -218,21 +228,12 @@ export default function MobileShowcase() {
                     } as React.CSSProperties
                   }
                 >
-                  {' '}
                   <Image
-                    loader={customImageLoader} // Add the loader prop here
-                    src={currentSrc}
+                    {...imageProps}
                     alt={img.alt}
-                    width={img.baseWidth}
-                    height={img.baseHeight}
                     draggable={false}
                     onContextMenu={e => e.preventDefault()}
                     className="h-full w-full rounded-lg object-contain object-top sm:rounded-xl md:rounded-2xl"
-                    priority={offset === 0}
-                    sizes="(max-width: 480px) 240px, (max-width: 640px) 256px, (max-width: 768px) 288px, (max-width: 1024px) 320px, (max-width: 1280px) 352px, 384px" // Adjusted sizes
-                    quality={85}
-                    placeholder="blur"
-                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
                 </motion.div>
               );
@@ -240,8 +241,6 @@ export default function MobileShowcase() {
           </AnimatePresence>
         </div>
       </div>
-
-      {/* Navigation Buttons removed */}
     </div>
   );
 }
