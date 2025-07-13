@@ -2,14 +2,22 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ThemeToggle from './theme-toggle';
 import Logo from './logo';
 import HamburgerIcon from './hamburger-icon'; // Import the new icon
 
 const navItems = [
-  { href: '/works', label: 'works' },
+  {
+    href: '/works',
+    label: 'works',
+    subItems: [
+      { href: '/works/3d', label: '3d' },
+      { href: '/works/dev', label: 'dev' },
+      { href: '/works/photo', label: 'photo' },
+    ],
+  },
   { href: '/skills', label: 'skills' },
   { href: '/resume', label: 'resume' },
   { href: '/about', label: 'about' },
@@ -18,9 +26,15 @@ const navItems = [
 export default function Navigation() {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [openMobileSubMenu, setOpenMobileSubMenu] = useState<string | null>(
+    null
+  );
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
+    setOpenMobileSubMenu(null); // Reset on main menu toggle
   };
 
   // Close mobile menu on route change
@@ -30,6 +44,22 @@ export default function Navigation() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
+
+  // Handle click outside for dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setOpenDropdown(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownRef]);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -62,22 +92,60 @@ export default function Navigation() {
 
           {/* --- Desktop: Left --- */}
           {/* Desktop Navigation Links */}
-          <div className="hidden md:flex md:flex-1 md:items-center md:justify-start md:space-x-8">
-            {navItems.map(({ href, label }) => (
-              <Link
+          <div className="hidden md:flex md:flex-1 md:items-center md:justify-start md:space-x-1">
+            {navItems.map(({ href, label, subItems }) => (
+              <div
                 key={href}
-                href={href}
-                className={`relative px-1 py-2 text-sm font-medium transition-all duration-300 ${
-                  pathname === href
-                    ? 'text-brand-black dark:text-brand-white'
-                    : 'text-brand-black/60 dark:text-brand-white/60 hover:text-brand-black dark:hover:text-brand-white'
-                } `}
+                className="relative"
+                ref={subItems ? dropdownRef : null}
+                onMouseEnter={() => subItems && setOpenDropdown(href)}
+                onMouseLeave={() => subItems && setOpenDropdown(null)}
               >
-                {label}
-                {pathname === href && (
-                  <div className="bg-brand-black dark:bg-brand-white absolute right-0 -bottom-1 left-0 h-0.5" />
-                )}
-              </Link>
+                <button
+                  onClick={() =>
+                    subItems &&
+                    setOpenDropdown(openDropdown === href ? null : href)
+                  }
+                  className={`relative rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ${
+                    pathname.startsWith(href)
+                      ? 'text-brand-black dark:text-brand-white'
+                      : 'text-brand-black/60 dark:text-brand-white/60 hover:bg-black/5 dark:hover:bg-white/5'
+                  } `}
+                >
+                  {label}
+                  {pathname.startsWith(href) && !subItems && (
+                    <div className="bg-brand-black dark:bg-brand-white absolute right-0 -bottom-1 left-0 h-0.5" />
+                  )}
+                </button>
+                <AnimatePresence>
+                  {subItems && openDropdown === href && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute top-full left-1/2 z-10 mt-2 w-32 -translate-x-1/2"
+                    >
+                      <div className="flex flex-col items-center justify-center rounded-md p-2">
+                        {subItems.map(subItem => (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
+                            className={`block w-full rounded-md px-4 py-2 text-center text-sm transition-colors ${
+                              pathname === subItem.href
+                                ? 'text-brand-black dark:text-brand-white'
+                                : 'text-brand-black/60 dark:text-brand-white/60 hover:bg-black/5 dark:hover:bg-white/5'
+                            }`}
+                            onClick={() => setOpenDropdown(null)}
+                          >
+                            {subItem.label}
+                          </Link>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             ))}
           </div>
 
@@ -136,21 +204,67 @@ export default function Navigation() {
                 </button>
               </div>
               {/* Scrollable container for navigation links */}
-              <div className="mt-12 flex flex-grow flex-col items-center space-y-6 overflow-y-auto pb-6">
-                {navItems.map(({ href, label }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    onClick={toggleMobileMenu}
-                    className={`px-4 py-3 text-xl font-semibold transition-colors duration-300 ${
-                      pathname === href
-                        ? 'text-brand-black dark:text-brand-white'
-                        : 'text-brand-black/70 hover:text-brand-black dark:text-brand-white/70 dark:hover:text-brand-white'
-                    } `}
-                  >
-                    {label}
-                  </Link>
-                ))}
+              <div className="mt-12 flex flex-grow flex-col items-center space-y-2 overflow-y-auto pb-6">
+                {navItems.map(({ href, label, subItems }) =>
+                  subItems ? (
+                    <div key={href} className="w-full text-center">
+                      <button
+                        onClick={() =>
+                          setOpenMobileSubMenu(
+                            openMobileSubMenu === href ? null : href
+                          )
+                        }
+                        className={`w-full px-4 py-3 text-xl font-semibold transition-colors duration-300 ${
+                          pathname.startsWith(href)
+                            ? 'text-brand-black dark:text-brand-white'
+                            : 'text-brand-black/70 hover:text-brand-black dark:text-brand-white/70 dark:hover:text-brand-white'
+                        } `}
+                      >
+                        {label}
+                      </button>
+                      <AnimatePresence>
+                        {openMobileSubMenu === href && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="flex flex-col items-center space-y-2 pt-2">
+                              {subItems.map(subItem => (
+                                <Link
+                                  key={subItem.href}
+                                  href={subItem.href}
+                                  onClick={toggleMobileMenu}
+                                  className={`px-4 py-2 text-lg font-medium transition-colors duration-300 ${
+                                    pathname === subItem.href
+                                      ? 'text-brand-black dark:text-brand-white'
+                                      : 'text-brand-black/60 hover:text-brand-black dark:text-brand-white/60 dark:hover:text-brand-white'
+                                  } `}
+                                >
+                                  {subItem.label}
+                                </Link>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  ) : (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={toggleMobileMenu}
+                      className={`px-4 py-3 text-xl font-semibold transition-colors duration-300 ${
+                        pathname === href
+                          ? 'text-brand-black dark:text-brand-white'
+                          : 'text-brand-black/70 hover:text-brand-black dark:text-brand-white/70 dark:hover:text-brand-white'
+                      } `}
+                    >
+                      {label}
+                    </Link>
+                  )
+                )}
               </div>
             </div>
           </motion.div>
