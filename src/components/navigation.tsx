@@ -6,17 +6,33 @@ import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import ThemeToggle from './theme-toggle';
 import Logo from './logo';
-import HamburgerIcon from './hamburger-icon'; // Import the new icon
+import HamburgerIcon from './hamburger-icon';
+import Glassmorphism from './glassmorphism';
 
-const navItems = [
+// Import sphere color palette from interactive background
+const sphereColorPalette = [
+  '0,100,244', // 0064F4 - Blue
+  '167,201,87', // A7C957 - Green
+  '239,83,72', // EF5348 - Red
+  '244,162,97', // F4A261 - Sandy Brown/Orange
+  '42,157,143', // 2A9D8F - Persian Green/Teal
+  '231,111,81', // E76F51 - Burnt Sienna/Coral
+  '255,202,58', // FFCA3A - Maize Crayola/Yellow
+  '138,201,38', // 8AC926 - Lime Green
+  '106,76,147', // 6A4C93 - Royal Purple
+  '25,130,196', // 1982C4 - Blue Crayola
+];
+
+type NavItem = {
+  href: string;
+  label: string;
+  subItems?: { href: string; label: string }[];
+};
+
+const navItems: NavItem[] = [
   {
     href: '/works',
     label: 'works',
-    subItems: [
-      { href: '/works/3d', label: '3d' },
-      { href: '/works/dev', label: 'dev' },
-      { href: '/works/photo', label: 'photo' },
-    ],
   },
   { href: '/skills', label: 'skills' },
   { href: '/resume', label: 'resume' },
@@ -30,12 +46,44 @@ export default function Navigation() {
   const [openMobileSubMenu, setOpenMobileSubMenu] = useState<string | null>(
     null
   );
+  const [isCompactLayout, setIsCompactLayout] = useState(false);
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const navRef = useRef<HTMLDivElement>(null);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Function to get active color for current page
+  const getActiveColor = (href: string) => {
+    const index = navItems.findIndex(item => item.href === href);
+    const rgbColor = sphereColorPalette[index % sphereColorPalette.length];
+    // Convert RGB string to hex
+    const [r, g, b] = rgbColor.split(',').map(Number);
+    return (
+      r.toString(16).padStart(2, '0') +
+      g.toString(16).padStart(2, '0') +
+      b.toString(16).padStart(2, '0')
+    );
+  };
 
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
-    setOpenMobileSubMenu(null); // Reset on main menu toggle
+    setOpenMobileSubMenu(null);
   };
+
+  // Check for overflow and switch layout
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (navRef.current) {
+        const container = navRef.current;
+        const isOverflowing = container.scrollWidth > container.clientWidth;
+        setIsCompactLayout(isOverflowing);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, []);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -61,6 +109,24 @@ export default function Navigation() {
     };
   }, [dropdownRef]);
 
+  // Handle click outside for mobile menu
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        isMobileMenuOpen &&
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target as Node)
+      ) {
+        setIsMobileMenuOpen(false);
+        setOpenMobileSubMenu(null);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobileMenuOpen]);
+
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
     if (isMobileMenuOpen) {
@@ -69,118 +135,188 @@ export default function Navigation() {
       document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = ''; // Cleanup on component unmount
+      document.body.style.overflow = '';
     };
   }, [isMobileMenuOpen]);
 
   return (
-    <nav className="fixed top-0 right-0 left-0 z-40 select-none">
-      <div className="container mx-auto px-6 py-4">
-        <div className="relative flex h-12 items-center">
-          {/* --- Mobile: Left --- */}
-          {/* Hamburger Button */}
-          <div className="md:hidden">
-            <button
-              onClick={toggleMobileMenu}
-              aria-label="Open menu"
-              className="text-brand-black dark:text-brand-white -ml-2 p-2"
-              aria-expanded={isMobileMenuOpen}
-            >
-              <HamburgerIcon isOpen={isMobileMenuOpen} className="h-6 w-6" />
-            </button>
-          </div>
-
-          {/* --- Desktop: Left --- */}
-          {/* Desktop Navigation Links */}
-          <div className="hidden md:flex md:flex-1 md:items-center md:justify-start md:space-x-1">
-            {navItems.map(({ href, label, subItems }) => (
-              <div
-                key={href}
-                className="relative"
-                ref={subItems ? dropdownRef : null}
-                onMouseEnter={() => subItems && setOpenDropdown(href)}
-                onMouseLeave={() => subItems && setOpenDropdown(null)}
-              >
-                <button
-                  onClick={() =>
-                    subItems &&
-                    setOpenDropdown(openDropdown === href ? null : href)
-                  }
-                  className={`relative rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ${
-                    pathname.startsWith(href)
-                      ? 'text-brand-black dark:text-brand-white'
-                      : 'text-brand-black/60 dark:text-brand-white/60 hover:bg-black/5 dark:hover:bg-white/5'
-                  } `}
+    <nav className="fixed top-4 left-1/2 z-40 w-full max-w-[900px] -translate-x-1/2 transform px-4 select-none">
+      <Glassmorphism className="rounded-[45.5px]">
+        <div className="px-12 py-3" ref={navRef}>
+          {/* Dynamic Layout - Full when space allows, Compact when overflow */}
+          {!isCompactLayout ? (
+            /* Full Layout */
+            <div className="flex h-[60px] items-center">
+              {/* Left: Logo */}
+              <div className="flex-shrink-0">
+                <Link
+                  href="/"
+                  className="block transition-opacity hover:opacity-70"
                 >
-                  {label}
-                  {pathname.startsWith(href) && !subItems && (
-                    <div className="bg-brand-black dark:bg-brand-white absolute right-0 -bottom-1 left-0 h-0.5" />
-                  )}
-                </button>
-                <AnimatePresence>
-                  {subItems && openDropdown === href && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      transition={{ duration: 0.2 }}
-                      className="absolute top-full left-1/2 z-10 mt-2 w-32 -translate-x-1/2"
-                    >
-                      <div className="flex flex-col items-center justify-center rounded-md p-2">
-                        {subItems.map(subItem => (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            className={`block w-full rounded-md px-4 py-2 text-center text-sm transition-colors ${
-                              pathname === subItem.href
-                                ? 'text-brand-black dark:text-brand-white'
-                                : 'text-brand-black/60 dark:text-brand-white/60 hover:bg-black/5 dark:hover:bg-white/5'
-                            }`}
-                            onClick={() => setOpenDropdown(null)}
-                          >
-                            {subItem.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <div className="flex h-[60px] items-center">
+                    <Logo size="md" minSize="sm" maxSize="lg" />
+                  </div>
+                </Link>
               </div>
-            ))}
-          </div>
 
-          {/* --- Center --- */}
-          {/* Mobile Logo (Absolute Center) */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:hidden">
-            <Link
-              href="/"
-              className="block"
-              onClick={() => isMobileMenuOpen && toggleMobileMenu()}
-            >
-              <Logo size="sm" />
-            </Link>
-          </div>
+              {/* Navigation Items - Next to Logo */}
+              <div className="ml-1 flex items-center space-x-1">
+                {navItems.map(({ href, label, subItems }) => {
+                  const isActive = pathname.startsWith(href);
 
-          {/* Desktop Theme Toggle (Absolute Center) */}
-          <div className="hidden md:absolute md:top-1/2 md:left-1/2 md:block md:-translate-x-1/2 md:-translate-y-1/2">
-            <ThemeToggle />
-          </div>
+                  return (
+                    <div
+                      key={href}
+                      className="relative"
+                      ref={subItems ? dropdownRef : null}
+                      onMouseEnter={() => {
+                        if (subItems) setOpenDropdown(href);
+                        setHoveredItem(href);
+                      }}
+                      onMouseLeave={e => {
+                        // Only close if we're not moving to the dropdown
+                        const relatedTarget = e.relatedTarget as HTMLElement;
+                        if (
+                          !relatedTarget ||
+                          !e.currentTarget.contains(relatedTarget)
+                        ) {
+                          if (subItems) setOpenDropdown(null);
+                          setHoveredItem(null);
+                        }
+                      }}
+                    >
+                      <AnimatePresence>
+                        {(isActive || hoveredItem === href) && (
+                          <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute inset-0 rounded-md"
+                          >
+                            <Glassmorphism
+                              className="rounded-md"
+                              backgroundColor={{
+                                color: isActive
+                                  ? getActiveColor(href)
+                                  : 'FFFFFF',
+                                opacity: isActive ? 15 : 8,
+                              }}
+                              intensity={isActive ? 90 : 60}
+                              frost={6}
+                            >
+                              <div />
+                            </Glassmorphism>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
-          {/* --- Right --- */}
-          <div className="flex flex-1 items-center justify-end">
-            {/* Mobile Theme Toggle */}
-            <div className="md:hidden">
-              <ThemeToggle />
+                      <button
+                        onClick={() =>
+                          subItems &&
+                          setOpenDropdown(openDropdown === href ? null : href)
+                        }
+                        className={`relative z-10 rounded-md px-3 py-2 text-sm font-medium transition-all duration-300 ${
+                          isActive
+                            ? 'text-brand-black dark:text-brand-white'
+                            : 'text-brand-black/60 dark:text-brand-white/60'
+                        }`}
+                      >
+                        {label}
+                      </button>
+
+                      <AnimatePresence>
+                        {subItems && openDropdown === href && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 10 }}
+                            transition={{ duration: 0.2 }}
+                            className="absolute top-full left-0 z-20 mt-2 w-32"
+                            onMouseEnter={() => {
+                              // Keep dropdown open when hovering over it
+                              setOpenDropdown(href);
+                            }}
+                            onMouseLeave={() => {
+                              // Close dropdown when leaving
+                              setOpenDropdown(null);
+                            }}
+                          >
+                            <Glassmorphism className="rounded-md">
+                              <div className="flex flex-col items-center justify-center p-2">
+                                {subItems.map(subItem => (
+                                  <Link
+                                    key={subItem.href}
+                                    href={subItem.href}
+                                    className={`block w-full rounded-md px-4 py-2 text-center text-sm transition-colors ${
+                                      pathname === subItem.href
+                                        ? 'text-brand-black dark:text-brand-white'
+                                        : 'text-brand-black/60 dark:text-brand-white/60 hover:bg-black/5 dark:hover:bg-white/5'
+                                    }`}
+                                    onClick={() => setOpenDropdown(null)}
+                                  >
+                                    {subItem.label}
+                                  </Link>
+                                ))}
+                              </div>
+                            </Glassmorphism>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Right: Theme Toggle */}
+              <div className="ml-auto flex-shrink-0">
+                <div style={{ width: '32px', height: '32px' }}>
+                  <ThemeToggle />
+                </div>
+              </div>
             </div>
-            {/* Desktop Logo */}
-            <div className="hidden md:block">
-              <Link href="/" className="transition-opacity hover:opacity-70">
-                <Logo size="md" minSize="sm" maxSize="lg" />
-              </Link>
+          ) : (
+            /* Compact Layout */
+            <div className="flex h-[60px] items-center justify-between">
+              {/* Left: Hamburger */}
+              <div className="flex-shrink-0">
+                <button
+                  onClick={toggleMobileMenu}
+                  aria-label="Open menu"
+                  className="text-brand-black dark:text-brand-white p-1"
+                  aria-expanded={isMobileMenuOpen}
+                  style={{ width: '32px', height: '32px' }}
+                >
+                  <HamburgerIcon
+                    isOpen={isMobileMenuOpen}
+                    className="h-full w-full"
+                  />
+                </button>
+              </div>
+
+              {/* Center: Logo */}
+              <div className="flex-shrink-0">
+                <Link
+                  href="/"
+                  className="block transition-opacity hover:opacity-70"
+                  onClick={() => isMobileMenuOpen && toggleMobileMenu()}
+                >
+                  <div className="flex h-[60px] items-center">
+                    <Logo size="md" minSize="sm" maxSize="lg" />
+                  </div>
+                </Link>
+              </div>
+
+              {/* Right: Theme Toggle */}
+              <div className="flex-shrink-0">
+                <div style={{ width: '32px', height: '32px' }}>
+                  <ThemeToggle />
+                </div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
-      </div>
+      </Glassmorphism>
 
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
@@ -190,83 +326,86 @@ export default function Navigation() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="bg-brand-white/80 dark:bg-brand-black/80 fixed inset-0 z-50 p-6 backdrop-blur-[100px] md:hidden"
+            className="fixed top-4 left-1/2 z-50 w-full max-w-[900px] -translate-x-1/2 transform px-4"
+            ref={mobileMenuRef}
           >
-            {/* Flex container to manage layout within the overlay */}
-            <div className="flex h-full flex-col">
-              <div className="flex justify-end">
-                <button
-                  onClick={toggleMobileMenu}
-                  aria-label="Close menu"
-                  className="text-brand-black dark:text-brand-white p-2"
-                >
-                  <HamburgerIcon isOpen={true} className="h-8 w-8" />
-                </button>
-              </div>
-              {/* Scrollable container for navigation links */}
-              <div className="mt-12 flex flex-grow flex-col items-center space-y-2 overflow-y-auto pb-6">
-                {navItems.map(({ href, label, subItems }) =>
-                  subItems ? (
-                    <div key={href} className="w-full text-center">
-                      <button
-                        onClick={() =>
-                          setOpenMobileSubMenu(
-                            openMobileSubMenu === href ? null : href
-                          )
-                        }
-                        className={`w-full px-4 py-3 text-xl font-semibold transition-colors duration-300 ${
-                          pathname.startsWith(href)
+            <Glassmorphism className="rounded-[45.5px]">
+              <div className="px-12 py-3">
+                <div className="mb-4 flex justify-end">
+                  <button
+                    onClick={toggleMobileMenu}
+                    aria-label="Close menu"
+                    className="text-brand-black dark:text-brand-white p-2"
+                    style={{ width: '40px', height: '40px' }}
+                  >
+                    <HamburgerIcon isOpen={true} className="h-full w-full" />
+                  </button>
+                </div>
+
+                <div className="flex flex-col items-center space-y-2 pb-4">
+                  {navItems.map(({ href, label, subItems }) =>
+                    subItems ? (
+                      <div key={href} className="w-full text-center">
+                        <button
+                          onClick={() =>
+                            setOpenMobileSubMenu(
+                              openMobileSubMenu === href ? null : href
+                            )
+                          }
+                          className={`w-full px-4 py-3 text-xl font-semibold transition-colors duration-300 ${
+                            pathname.startsWith(href)
+                              ? 'text-brand-black dark:text-brand-white'
+                              : 'text-brand-black/70 hover:text-brand-black dark:text-brand-white/70 dark:hover:text-brand-white'
+                          }`}
+                        >
+                          {label}
+                        </button>
+                        <AnimatePresence>
+                          {openMobileSubMenu === href && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="flex flex-col items-center space-y-2 pt-2">
+                                {subItems.map(subItem => (
+                                  <Link
+                                    key={subItem.href}
+                                    href={subItem.href}
+                                    onClick={toggleMobileMenu}
+                                    className={`px-4 py-2 text-lg font-medium transition-colors duration-300 ${
+                                      pathname === subItem.href
+                                        ? 'text-brand-black dark:text-brand-white'
+                                        : 'text-brand-black/60 hover:text-brand-black dark:text-brand-white/60 dark:hover:text-brand-white'
+                                    }`}
+                                  >
+                                    {subItem.label}
+                                  </Link>
+                                ))}
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    ) : (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={toggleMobileMenu}
+                        className={`px-4 py-3 text-xl font-semibold transition-colors duration-300 ${
+                          pathname === href
                             ? 'text-brand-black dark:text-brand-white'
                             : 'text-brand-black/70 hover:text-brand-black dark:text-brand-white/70 dark:hover:text-brand-white'
-                        } `}
+                        }`}
                       >
                         {label}
-                      </button>
-                      <AnimatePresence>
-                        {openMobileSubMenu === href && (
-                          <motion.div
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            className="overflow-hidden"
-                          >
-                            <div className="flex flex-col items-center space-y-2 pt-2">
-                              {subItems.map(subItem => (
-                                <Link
-                                  key={subItem.href}
-                                  href={subItem.href}
-                                  onClick={toggleMobileMenu}
-                                  className={`px-4 py-2 text-lg font-medium transition-colors duration-300 ${
-                                    pathname === subItem.href
-                                      ? 'text-brand-black dark:text-brand-white'
-                                      : 'text-brand-black/60 hover:text-brand-black dark:text-brand-white/60 dark:hover:text-brand-white'
-                                  } `}
-                                >
-                                  {subItem.label}
-                                </Link>
-                              ))}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  ) : (
-                    <Link
-                      key={href}
-                      href={href}
-                      onClick={toggleMobileMenu}
-                      className={`px-4 py-3 text-xl font-semibold transition-colors duration-300 ${
-                        pathname === href
-                          ? 'text-brand-black dark:text-brand-white'
-                          : 'text-brand-black/70 hover:text-brand-black dark:text-brand-white/70 dark:hover:text-brand-white'
-                      } `}
-                    >
-                      {label}
-                    </Link>
-                  )
-                )}
+                      </Link>
+                    )
+                  )}
+                </div>
               </div>
-            </div>
+            </Glassmorphism>
           </motion.div>
         )}
       </AnimatePresence>
