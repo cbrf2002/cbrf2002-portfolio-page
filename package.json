@@ -5,7 +5,6 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "npx @cloudflare/next-on-pages --outdir=./cf-pages-output",
-    "vercel-build": "next build",
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
