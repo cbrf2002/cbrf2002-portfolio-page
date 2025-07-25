@@ -46,17 +46,19 @@ export default function ClientWrapper({
   return (
     <>
       <InteractiveBackground />
-      <motion.main
-        className="relative z-10 min-w-[280px]"
-        drag="x"
-        dragConstraints={{ left: 0, right: 0 }}
-        dragElastic={0.1} // Allow some elastic bounce
-        onDragEnd={handleDragEnd}
-        style={{ touchAction: 'pan-y' } as React.CSSProperties}
-      >
-        {children}
-      </motion.main>
-      <Navigation />
+      <div className="mx-auto max-w-[900px] min-w-[400px]">
+        <motion.main
+          className="relative z-10"
+          drag="x"
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.1} // Allow some elastic bounce
+          onDragEnd={handleDragEnd}
+          style={{ touchAction: 'pan-y' } as React.CSSProperties}
+        >
+          {children}
+        </motion.main>
+        <Navigation />
+      </div>
       <CustomCursor />
     </>
   );
