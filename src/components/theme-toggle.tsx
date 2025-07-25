@@ -20,13 +20,13 @@ const ThemeToggle: React.FC = () => {
   return (
     <button
       onClick={toggleTheme}
-      className="bg-brand-black/10 dark:bg-brand-white/10 hover:bg-brand-black/20 dark:hover:bg-brand-white/20 relative rounded-full p-2 transition-all duration-300 ease-in-out focus:outline-none"
+      className="bg-brand-black/10 dark:bg-brand-white/10 hover:bg-brand-black/20 dark:hover:bg-brand-white/20 relative flex h-full w-full items-center justify-center rounded-full transition-all duration-300 ease-in-out focus:outline-none"
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
-      <div className="relative h-6 w-6 overflow-hidden">
+      <div className="relative h-5 w-5 overflow-hidden">
         {/* Sun Icon */}
         <svg
-          className={`text-brand-black dark:text-brand-white absolute inset-0 h-6 w-6 transition-opacity duration-300 ease-in-out ${theme === 'dark' ? 'scale-0 rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100'} `}
+          className={`text-brand-black dark:text-brand-white absolute inset-0 h-5 w-5 transition-opacity duration-300 ease-in-out ${theme === 'dark' ? 'scale-0 rotate-90 opacity-0' : 'scale-100 rotate-0 opacity-100'} `}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -38,7 +38,7 @@ const ThemeToggle: React.FC = () => {
 
         {/* Moon Icon */}
         <svg
-          className={`text-brand-black dark:text-brand-white absolute inset-0 h-6 w-6 transition-opacity duration-300 ease-in-out ${theme === 'dark' ? 'scale-100 rotate-0 opacity-100' : 'scale-0 -rotate-90 opacity-0'} `}
+          className={`text-brand-black dark:text-brand-white absolute inset-0 h-5 w-5 transition-opacity duration-300 ease-in-out ${theme === 'dark' ? 'scale-100 rotate-0 opacity-100' : 'scale-0 -rotate-90 opacity-0'} `}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
